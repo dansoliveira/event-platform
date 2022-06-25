@@ -1,47 +1,19 @@
 import { DefaultUi, Player, Youtube } from "@vime/react";
 import { CaretRight, DiscordLogo, FileArrowDown, Lightning } from "phosphor-react";
 import { useParams } from "react-router-dom";
-import { gql, useQuery } from "@apollo/client";
 
 import '@vime/core/themes/default.css';
-
-const GET_LESSON_BY_SLUG_QUERY = gql`
-  query GetLessonBySlug($slug: String = "") {
-    lesson(where: {slug: $slug}) {
-      videoId
-      title
-      description
-      teacher {
-        name
-        bio
-        avatarURL
-      }
-    }
-  }
-`
-
-interface GetLessonBySlugResponse {
-  lesson: {
-    videoId: string
-    title: string
-    description: string
-    teacher: {
-      name: string
-      bio: string
-      avatarURL: string
-    }
-  }
-}
+import { useGetLessonBySlugQuery } from "../graphql/generated";
 
 export function LessonContent() {
   const { slug } = useParams<{ slug: string }>()
-  const { data } = useQuery<GetLessonBySlugResponse>(GET_LESSON_BY_SLUG_QUERY, {
+  const { data } = useGetLessonBySlugQuery({
     variables: {
       slug,
     }
   })
 
-  if (!data) {
+  if (!data || !data.lesson) {
     return (
       <div className="flex-1">
         <p>Carregando...</p>
@@ -70,18 +42,20 @@ export function LessonContent() {
               {data.lesson.description}
             </p>
 
-            <div className="flex items-center gap-4 mt-6">
-              <img
-                className="h-16 w-16 rounded-full border border-blue-500"
-                src={data.lesson.teacher.avatarURL}
-                alt={data.lesson.teacher.name}
-              />
+            {data.lesson.teacher && (
+              <div className="flex items-center gap-4 mt-6">
+                <img
+                  className="h-16 w-16 rounded-full border border-blue-500"
+                  src={data.lesson.teacher.avatarURL}
+                  alt={data.lesson.teacher.name}
+                />
 
-              <div className="leading-relaxed">
-                <strong className="font-bold text-2xl block">{data.lesson.teacher.name}</strong>
-                <span className="text-gray-200 text-sm block">{data.lesson.description}</span>
+                <div className="leading-relaxed">
+                  <strong className="font-bold text-2xl block">{data.lesson.teacher.name}</strong>
+                  <span className="text-gray-200 text-sm block">{data.lesson.description}</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-4">
